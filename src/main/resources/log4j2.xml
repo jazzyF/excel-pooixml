@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="LOG_FILE_NAME">application</Property>
+    </Properties>
+
+    <Appenders>
+
+        <!-- Console Appender -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- Rolling File Appender: rolls daily and caps total size at 1GB -->
+        <RollingFile name="RollingFileAppender"
+                     fileName="${LOG_DIR}/${LOG_FILE_NAME}.log"
+                     filePattern="${LOG_DIR}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+
+            <Policies>
+                <!-- Roll over at midnight each day -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- Also roll if a single file somehow exceeds 1GB before midnight -->
+                <SizeBasedTriggeringPolicy size="1GB"/>
+            </Policies>
+
+            <DefaultRolloverStrategy>
+                <!-- Keep rolled files until total size across all of them hits 1GB, then delete oldest -->
+                <Delete basePath="${LOG_DIR}" maxDepth="1">
+                    <IfFileName glob="${LOG_FILE_NAME}-*.log.gz"/>
+                    <IfAccumulatedFileSize exceeds="1GB"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- Silence overly verbose third-party libraries -->
+        <Logger name="org.apache.hc" level="WARN" additivity="false">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="RollingFileAppender"/>
+        </Logger>
+
+        <!-- Root logger: apply to everything else -->
+        <Root level="INFO">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="RollingFileAppender"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>
